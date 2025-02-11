@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "3000:3000"
+  data-processing:
+    build: ./data-processing
+    ports: 
+      - "5000:5000"
+  visualization:
+    build: ./visualization
+    ports: 
+      - "4000:4000"
+  user-management:
+    build: ./user-management
+    ports: 
+      - "6000:6000"
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
