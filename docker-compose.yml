@@ -1,22 +1,104 @@
 version: '3.8'
 services:
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: ./backend/api-gateway
     ports:
       - "3000:3000"
+    depends_on:
+      - data-processing
+      - user-management
+      - visualization
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
   data-processing:
-    build: ./data-processing
+    build:
+      context: ./backend/data-processing
     ports: 
       - "5000:5000"
+    depends_on:
+      - postgres
+      - shared-database
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backend/shared_database_models:/app/shared_database_models
+
   visualization:
-    build: ./visualization
+    build:
+      context: ./backend/visualization
     ports: 
-      - "4000:4000"
+      - "3001:3001"
+    depends_on:
+      - postgres
+      - shared-database
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ../shared_database_models:/app/shared_database_models
+
   user-management:
-    build: ./user-management
+    build:
+      context: ./backend/user-management
     ports: 
-      - "6000:6000"
-  frontend:
-    build: ./frontend
+      - "5001:5001"
+    depends_on:
+      - postgres
+      - shared-database
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PYTHONPATH: "/app:/app/shared_database_models"
+    volumes:
+      - ./backend/shared_database_models:/app/shared_database_models
+
+  shared-database:
+    build:
+      context: ./backend/shared_database_models
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PYTHONPATH: "/app"
+    volumes:
+      - ./backend/shared_database_models:/app
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "8080:80"
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:

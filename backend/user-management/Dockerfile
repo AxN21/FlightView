@@ -2,7 +2,7 @@
 FROM python:3.9-slim
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /user-management
 
 # Copy the requirements file and install dependencies
 COPY requirements.txt .
@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose the port the app runs on
-EXPOSE 6000
+EXPOSE 5001
 
 # Run the application
-CMD ["python", "app.py"]
+CMD ["python", "run.py"]
